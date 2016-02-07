@@ -1,29 +1,62 @@
-let CanvasesDB = new Mongo.Collection('canvases');
-let LinesDB = new Mongo.Collection('lines');
-let LinesToGreyDB = new Mongo.Collection('linesToGrey');
-let LinesToEraseDB = new Mongo.Collection('linesToErase');
-
 class Canvas extends React.Component {
 
   constructor(props) {
     super(props);
+    this.state = {
+      isErasing: false,
+      color: '#008080'
+    };
     this.isDrawing = false;
+    this.toErase = [];
+    this.canvasId;
   }
 
   render() {
     return (
-      <canvas 
-        onMouseDown={this.startDrawing.bind(this)}
-        onMouseMove={this.whileDrawing.bind(this)} 
-        onDrag={this.whileDrawing.bind(this)}
-        onMouseOut={this.endDrawing.bind(this)}
-        onMouseUp={this.endDrawing.bind(this)}
-        ref="canvasElem">
-      </canvas>
+      <div>
+        <canvas 
+          onMouseDown={this.startDrawing.bind(this)}
+          onMouseMove={this.whileDrawing.bind(this)} 
+          onDrag={this.whileDrawing.bind(this)}
+          onMouseOut={this.endDrawing.bind(this)}
+          onMouseUp={this.endDrawing.bind(this)}
+          ref="canvasElem">
+        </canvas>
+        <CanvasTools
+          isErasing={this.state.isErasing}
+          currentColor={this.color}
+          handleShareCanvas={this.handleShareCanvas.bind(this)}
+          handleEraserChange={this.handleEraserChange.bind(this)} 
+          handleColorChange={this.handleColorChange.bind(this)} />
+      </div>
     );
   }
 
+  handleShareCanvas() {
+    window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
+  }
+
+  handleEraserChange() {
+    console.log('isErasing');
+    this.setState({
+      isErasing: !this.state.isErasing
+    })
+  }
+
+  handleColorChange(color) {
+    console.log('handleColorChange',color);
+    this.setState({
+      color: color
+    });
+  }
+
   componentDidMount() {
+    window.addEventListener("resize",this.init.bind(this), false);
+    this.init();
+  }
+
+  init() {
+
     this.refs.canvasElem.width = this.props.width || window.innerWidth;
     this.refs.canvasElem.height = this.props.height || window.innerHeight;
 
@@ -46,26 +79,27 @@ class Canvas extends React.Component {
     let self = this;
     LinesDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        console.log('LinesDB added',doc);
-        // self.drawSplines(this.canvasCtx, doc.coords, 0.5);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
         // will fire when we first load doc
         // if using old canvas, we will want to render lines
       },
       changed(doc) {
-        console.log('changed',doc);
-        console.log('currentLineId',self.currentLineId);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
       }
     });
 
     LinesToGreyDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        console.log('LinesToGreyDB added',doc);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#D3D3D3');
+        self.toErase.push(doc);
       }
     });
 
     LinesToEraseDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        console.log('LinesToEraseDB added',doc);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#F6F7F7', 4);
+        setTimeout( () => self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#F6F7F7', 4));
+        LinesToEraseDB.remove(doc._id);
       }
     });
   }
@@ -75,37 +109,66 @@ class Canvas extends React.Component {
     this.isDrawing = true;
     this.lastX = event.pageX - event.target.offsetLeft;
     this.lastY = event.pageY - event.target.offsetTop;
-    this.addLine(this.lastX, this.lastY);
+    if(!this.state.isErasing) this.addLine(this.lastX, this.lastY);
   }  
 
   whileDrawing(event) {
     if(this.isDrawing){
       var cx = event.pageX - event.target.offsetLeft;
       var cy = event.pageY - event.target.offsetTop;
-      if(Math.abs(this.lastX-cx)>15 || Math.abs(this.lastY-cy)>15){
-        this.addNewCoord(cx);
-        this.addNewCoord(cy);
+      if(this.shouldAdd(this.lastX,this.lastY,cx,cy)){
+        if(this.state.isErasing){
+          // collision detection
+          this.collisionDetection(cx, cy);
+        }else{
+          this.addNewCoord(cx);
+          this.addNewCoord(cy);
+        }
         this.lastX = cx;
         this.lastY = cy;
       }
     }
-  }  
+  }
 
+  shouldAdd(lastX, lastY, curX, curY) {
+    return Math.sqrt(Math.pow(lastX-curX,2) + Math.pow(lastY-curY,2)) > 15;
+  }
+
+  collisionDetection(cx, cy) {
+    LinesDB.find({canvasId: this.canvasId}).forEach((line)=>{
+      console.log('line:',line);
+      for(var i = 0; i < line.coords.length - 1; i += 2){
+        if(Math.abs(line.coords[i]-cx)<15 && Math.abs(line.coords[i+1]-cy)<15){
+          LinesToGreyDB.insert({
+            canvasId: this.canvasId,
+            coords: line.coords
+          }, () => {
+            LinesDB.remove(line._id);
+          });
+          break;
+        }
+      }
+    });
+  }
+
+  // TODO: make sure grey lines are being erased 
   endDrawing() {
-    console.log("endDrawing");
     this.isDrawing = false;
+    while(this.toErase.length){
+      var doc = this.toErase.pop();
+      console.log("endDrawing", doc);
+      LinesToEraseDB.insert({
+        canvasId: this.canvasId,
+        coords: doc.coords
+      }, () => {
+        LinesToGreyDB.remove(doc._id);
+      });
+
+    }
   }  
 
   createNewCanvas() {
     return CanvasesDB.insert({name:'jeff'});
-  }
-
-  makeid() {
-      var text = "";
-      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-      for(var i=0;i<5;i++)
-          text += possible.charAt(Math.floor(Math.random() * possible.length));
-      return text;
   }
 
   addLine(cx, cy) {
@@ -116,9 +179,9 @@ class Canvas extends React.Component {
   }
 
   addNewCoord(coord) {
-      LinesDB.update(this.currentLineId, { 
-        $push: { coords: coord }
-      });
+    LinesDB.update(this.currentLineId, { 
+      $push: { coords: coord }
+    });
   }
 
   hexToCanvasColor(hexColor,opacity){
@@ -156,10 +219,10 @@ class Canvas extends React.Component {
   }
 
   drawSpline(ctx,pts,t,color,width){
-      ctx.lineWidth=width || 2;
+      ctx.lineWidth = width || 2;
       ctx.save();
-      var cp=[];   // array of control points, as x0,y0,x1,y1,...
-      var n=pts.length;
+      var cp = [];   // array of control points, as x0,y0,x1,y1,...
+      var n = pts.length;
       var color = this.hexToCanvasColor(color||'#94C47E',0.75);
 
       // Draw an open curve, not connected at the ends
@@ -192,7 +255,6 @@ class Canvas extends React.Component {
       ctx.restore();
   }
 
-
 }
 
 Canvas.propTypes = { 
@@ -201,8 +263,6 @@ Canvas.propTypes = {
   height: React.PropTypes.number,
   width: React.PropTypes.number
 };
-
-Canvas.defaultProps = { isErasing: false };
 
 if (Meteor.isClient) {
   window.Canvas = Canvas;

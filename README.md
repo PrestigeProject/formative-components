@@ -34,15 +34,8 @@
 
 ### Notes
 
-Canvases = new Mongo.Collection('canvases');
+While completing more research, I discovered another way to filter the paths.
 
-Canvas.insert({
-  
-}, (err, nID) => {
-  
-})
+Right now, I'm asking if the new 'x' or 'y' coordinate are 15pts away from the previous pts. If they are, I assume they are okay to add to the points.
 
-I think the way I will structure the data is by making collections for "Canvases" that will store the id reference to the related location of its lines, linesToGrey, and linesToErase.
-
-This will allow me to "observe" each of the line types separately.
-
+However, the metric that I should be looking at is if they are a certain square magitude away.
