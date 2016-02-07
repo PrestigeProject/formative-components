@@ -29,6 +29,7 @@ FlowRouter.route('/canvas', {
 FlowRouter.route('/mathinput', {
   action() {
     ReactLayout.render(App,{
+      content: <MathInputCtn />,
       name: 'MathInput'
     });
   }

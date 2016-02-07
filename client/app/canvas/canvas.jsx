@@ -33,7 +33,11 @@ class Canvas extends React.Component {
   }
 
   handleShareCanvas() {
-    window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
+    if(window.location.host === 'localhost:3000'){
+      window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
+    }else{
+      window.location.assign('http://formative-components.meteor.com');
+    }
   }
 
   handleEraserChange() {
@@ -264,6 +268,4 @@ Canvas.propTypes = {
   width: React.PropTypes.number
 };
 
-if (Meteor.isClient) {
-  window.Canvas = Canvas;
-}
+window.Canvas = Canvas;
