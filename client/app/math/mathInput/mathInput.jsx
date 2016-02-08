@@ -1,21 +1,13 @@
-var PT = React.PropTypes;
+class MathInput extends React.Component {
 
-MathInput = React.createClass({
+    constructor(props) {
+      super(props);
+    }
 
-    propTypes: {
-        value: PT.string,
-        convertDotToTimes: PT.bool,
-        labelText: React.PropTypes.string,
-        onFocus: PT.func,
-        onBlur: PT.func
-    },
-
-    render: function() {
+    render() {
 
         var className = classNames({
             "math-input": true,
-            // mathquill usually adds these itself but react removes them when
-            // updating the component.
             "mq-editable-field": true,
             "mq-math-mode": true
         });
@@ -27,66 +19,13 @@ MathInput = React.createClass({
         return (
             <div style={{display: "inline-block", width:"100%", height:"100%"}}>
                 <div style={{display: 'inline-block', width:"100%", height:"100%"}}>
-                    <span className={className}
-                          ref="mathinput"
-                          onFocus={this.handleFocus}
-                          onBlur={this.handleBlur} />
+                    <span className={className} ref="mathinput" />
                 </div>
             </div>
-        ) 
-    },
+        );
+    }
 
-    // handlers:
-    // keep track of two related bits of state:
-    // * this.state.focused - whether the buttons are currently shown
-    // * this.mouseDown - whether a mouse click is active that started in the
-    //   buttons div
-
-    handleFocus: function() {
-        this.setState({ focused: true });
-        // TODO(joel) fix properly - we should probably allow onFocus handlers
-        // to this property, but we need to work correctly with them.
-        // if (this.props.onFocus) {
-        //     this.props.onFocus();
-        // }
-    },
-
-    handleMouseDown: function(event) {
-        var focused = ReactDOM.findDOMNode(this).contains(event.target);
-        this.mouseDown = focused;
-        if (!focused) {
-            this.setState({ focused: false });
-        }
-    },
-
-    handleMouseUp: function() {
-        // this mouse click started in the buttons div so we should focus the
-        // input
-        if (this.mouseDown) {
-            this.focus();
-        }
-        this.mouseDown = false;
-    },
-
-    handleBlur: function() {
-        if (!this.mouseDown) {
-            this.setState({ focused: false });
-        }
-    },
-
-    getDefaultProps: function() {
-        return {
-            value: "",
-            convertDotToTimes: false,
-            buttonsVisible: 'focused'
-        };
-    },
-
-    getInitialState: function() {
-        return { focused: false };
-    },
-
-    insert: function(value) {
+    insert(value) {
         var input = this.mathField();
         if (_(value).isFunction()) {
             value(input);
@@ -96,24 +35,17 @@ MathInput = React.createClass({
             input.write(value).focus();
         }
         input.focus();
-    },
+    }
 
-    mathField: function(options) {
+    mathField(options) {
         // MathQuill.MathField takes a DOM node, MathQuill-ifies it if it's
         // seeing that node for the first time, then returns the associated
         // MathQuill object for that node. It is stable - will always return
         // the same object when called on the same DOM node.
         return MathQuill.MathField(ReactDOM.findDOMNode(this.refs.mathinput), options);
-    },
+    }
 
-    componentWillUnmount: function() {
-        window.removeEventListener("mousedown", this.handleMouseDown);
-        window.removeEventListener("mouseup", this.handleMouseUp);
-    },
-
-    componentDidMount: function() {
-        window.addEventListener("mousedown", this.handleMouseDown);
-        window.addEventListener("mouseup", this.handleMouseUp);
+    componentDidMount() {
 
         // These options can currently only be set globally. (Hopefully this
         // will change at some point.) They appear safe to set multiple times.
@@ -181,8 +113,7 @@ MathInput = React.createClass({
                     }
 
                     if (initialized && this.props.value !== value) {
-                        console.log('value',value);
-                        // this.props.onChange(value);
+                        this.props.onChange(value);
                     }
                 },
                 enter: () => {
@@ -206,22 +137,26 @@ MathInput = React.createClass({
         this.mathField().latex(this.props.value);
 
         initialized = true;
-    },
+    }
 
-    componentDidUpdate: function() {
+    componentDidUpdate() {
         if (!_.isEqual(this.mathField().latex(), this.props.value)) {
             this.mathField().latex(this.props.value);
         }
-    },
-
-    focus: function() {
-        this.mathField().focus();
-        this.setState({ focused: true });
-    },
-
-    blur: function() {
-        this.mathField().blur();
-        this.setState({ focused: false });
     }
-});
 
+};
+
+MathInput.propTypes = {
+    value: React.PropTypes.string,
+    convertDotToTimes: React.PropTypes.bool,
+    labelText: React.PropTypes.string,
+    onChange: React.PropTypes.func
+};
+
+MathInput.defaultProps = {
+    value: "",
+    convertDotToTimes: false
+};
+
+window.MathInput = MathInput;
