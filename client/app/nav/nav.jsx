@@ -2,6 +2,7 @@ class Nav extends React.Component {
 
   render() {
 
+    let url = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'http://formative-components.metoer.com';
     let canvasClass = classNames('nav-btn',{ 'active': this.props.name === 'Canvas'});
     let mathinputClass = classNames('nav-btn',{ 'active': this.props.name === 'MathInput' });
 
@@ -12,10 +13,10 @@ class Nav extends React.Component {
             <span className="nav-title-contrast">Go</span>Formative
           </h2>
           <span className={canvasClass}>
-            <a href="http://localhost:3000/canvas">Canvas</a>
+            <a href={url+'/canvas'}>Canvas</a>
           </span>
           <span className={mathinputClass}>
-            <a href="http://localhost:3000/mathinput">MathInput</a>
+            <a href={url+'/mathinput'}>MathInput</a>
           </span>
           <span className="nav-author">
             by Jeff Plourd
