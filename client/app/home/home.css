@@ -1,0 +1,75 @@
+.home-ctn {
+  font-family: 'Roboto', sans-serif;
+  background-color: #F6F7F7;
+
+  position: absolute;
+  top: 3.5em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;  /* TWEENER - IE 10 */
+  display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex; 
+  -webkit-box-justify-content: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-box-align-items: center;
+  -webkit-align-items: center;
+  align-items: center;
+}
+
+.home {
+  width: 40%;
+  height: 40%;
+  background-color: #FFFFFF;
+  box-shadow: 0 3px 5px -1px rgba(0,0,0,.2),0 5px 8px 0 rgba(0,0,0,.14),0 1px 14px 0 rgba(0,0,0,.12);
+
+  display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;  /* TWEENER - IE 10 */
+  display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex; 
+  -webkit-box-justify-content: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-box-align-items: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-flex-flow: column wrap;
+  -webkit-flex-flow: column wrap;
+  flex-flow: column wrap;
+}
+
+.home-title {
+  width: 60%;
+  text-align: center;
+
+  display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;  /* TWEENER - IE 10 */
+  display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex; 
+  -webkit-box-justify-content: space-around;
+  -webkit-justify-content: space-around;
+  justify-content: space-around;
+  -webkit-box-align-items: space-around;
+  -webkit-align-items: space-around;
+  align-items: space-around;
+  -webkit-box-flex-flow: column nowrap;
+  -webkit-flex-flow: column nowrap;
+  flex-flow: column nowrap;
+}
+
+.home-images {
+  width: 60%;
+  display: -webkit-box;  /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+  display: -ms-flexbox;  /* TWEENER - IE 10 */
+  display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+  display: flex; 
+  -webkit-box-justify-content: space-around;
+  -webkit-justify-content: space-around;
+  justify-content: space-around;
+  -webkit-box-align-items: space-around;
+  -webkit-align-items: space-around;
+  align-items: space-around;
+}
