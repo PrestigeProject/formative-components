@@ -249,11 +249,8 @@ class Canvas extends React.Component {
   /* Canvas Tools Functionality */ 
 
   handleShareCanvas() {
-    if(window.location.hostname === 'localhost'){
-      window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
-    }else{
-      window.location.assign('http://formative-components.meteor.com/' + this.canvasId);
-    }
+    let url = window.location.hostname === 'localhost' ? 'http://localhost:3000/canvas/' : 'http://formative-components.meteor.com/canvas/';
+    window.location.assign(url + this.canvasId);
   }
 
   handleEraserChange() {

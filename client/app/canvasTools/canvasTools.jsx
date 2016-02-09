@@ -14,13 +14,18 @@ class CanvasTools extends React.Component {
   }
 
   render() {
+
+    let imgUrl = this.props.isErasing ? 'pencil.png' : 'eraser.png';
+    if(window.location.hostname !== 'localhost') imgUrl = '../' + imgUrl;
+
     return (
       <div className="canvas-tools">
         <div onClick={this.props.handleShareCanvas} className="canvas-share">
           SHARE
         </div>
         <button onClick={this.props.handleEraserChange} className="canvas-btn">
-          <img src={this.props.isErasing ? 'pencil.png' : 'eraser.png'} />
+          <img src={imgUrl}
+               alt={this.props.isErasing ? 'pen' : 'eraser'}/>
         </button>
         {this.renderColors()}
       </div>
