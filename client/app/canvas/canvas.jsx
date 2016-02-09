@@ -67,24 +67,24 @@ class Canvas extends React.Component {
     let self = this;
     LinesDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.5, self.state.color);
       },
       changed(doc) {
-        self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
+        self.drawSpline(self.canvasCtx, doc.coords, 0.5, self.state.color);
       }
     });
 
     LinesToGreyDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#D3D3D3');
+        self.drawSpline(self.canvasCtx, doc.coords, 0.5, '#D3D3D3');
         self.toErase.push(doc);
       }
     });
 
     LinesToEraseDB.find({canvasId: canvasId}).observe({
       added(doc) {
-        self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#F6F7F7', 4);
-        setTimeout( () => self.drawSpline(self.canvasCtx, doc.coords, 0.2, '#F6F7F7', 4));
+        self.drawSpline(self.canvasCtx, doc.coords, 0.5, '#F6F7F7', 4);
+        setTimeout( () => self.drawSpline(self.canvasCtx, doc.coords, 0.5, '#F6F7F7', 4));
         LinesToEraseDB.remove(doc._id);
       }
     });
@@ -138,7 +138,7 @@ class Canvas extends React.Component {
   /* Helper functions for canvas */ 
 
   shouldAdd(lastX, lastY, curX, curY) {
-    return Math.sqrt(Math.pow(lastX-curX,2) + Math.pow(lastY-curY,2)) > 15;
+    return Math.sqrt(Math.pow(lastX-curX,2) + Math.pow(lastY-curY,2)) > 18;
   }
 
   collisionDetection(cx, cy) {
