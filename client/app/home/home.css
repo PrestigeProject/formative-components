@@ -73,3 +73,12 @@
   -webkit-align-items: space-around;
   align-items: space-around;
 }
+
+@media (max-width: 600px) {
+
+  .home {
+    width: 95%;
+    height: 95%;
+  }
+
+}

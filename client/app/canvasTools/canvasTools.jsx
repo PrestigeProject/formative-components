@@ -20,7 +20,7 @@ class CanvasTools extends React.Component {
           SHARE
         </div>
         <button onClick={this.props.handleEraserChange} className="canvas-btn">
-          <h2>{this.props.isErasing ? 'Pen' : 'Eraser'}</h2>
+          <img src={this.props.isErasing ? 'pencil.png' : 'eraser.png'} />
         </button>
         {this.renderColors()}
       </div>

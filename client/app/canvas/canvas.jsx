@@ -15,11 +15,15 @@ class Canvas extends React.Component {
     return (
       <div>
         <canvas 
+          onTouchStart={this.startDrawing.bind(this)}
           onMouseDown={this.startDrawing.bind(this)}
-          onMouseMove={this.whileDrawing.bind(this)} 
+          onMouseMove={this.whileDrawing.bind(this)}
+          onTouchMove={this.whileDrawing.bind(this)} 
           onDrag={this.whileDrawing.bind(this)}
           onMouseOut={this.endDrawing.bind(this)}
           onMouseUp={this.endDrawing.bind(this)}
+          onTouchCancel={this.endDrawing.bind(this)}
+          onTouchEnd={this.endDrawing.bind(this)}
           ref="canvasElem">
         </canvas>
         <CanvasTools
@@ -32,33 +36,12 @@ class Canvas extends React.Component {
     );
   }
 
-  handleShareCanvas() {
-    if(window.location.host === 'localhost:3000'){
-      window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
-    }else{
-      window.location.assign('http://formative-components.meteor.com');
-    }
-  }
-
-  handleEraserChange() {
-    console.log('isErasing');
-    this.setState({
-      isErasing: !this.state.isErasing
-    })
-  }
-
-  handleColorChange(color) {
-    console.log('handleColorChange',color);
-    this.setState({
-      color: color
-    });
-  }
-
   componentDidMount() {
     window.addEventListener("resize",this.init.bind(this), false);
     this.init();
   }
 
+  // Bootstraps HTML5 Canvas
   init() {
 
     this.refs.canvasElem.width = this.props.width || window.innerWidth;
@@ -77,6 +60,7 @@ class Canvas extends React.Component {
       this.setObservables(this.props.canvasId);
   }
 
+  // Sets listeners for database and renders lines
   setObservables(canvasId) {
     this.canvasId = canvasId;
 
@@ -84,8 +68,6 @@ class Canvas extends React.Component {
     LinesDB.find({canvasId: canvasId}).observe({
       added(doc) {
         self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
-        // will fire when we first load doc
-        // if using old canvas, we will want to render lines
       },
       changed(doc) {
         self.drawSpline(self.canvasCtx, doc.coords, 0.2, self.state.color);
@@ -108,18 +90,21 @@ class Canvas extends React.Component {
     });
   }
 
+  // handles logic for initial click or touch
   startDrawing(event) {
     console.log("startDrawing");
     this.isDrawing = true;
-    this.lastX = event.pageX - event.target.offsetLeft;
-    this.lastY = event.pageY - event.target.offsetTop;
+    this.lastX = (event.pageX || event.changedTouches['0'].pageX) - event.target.offsetLeft;
+    this.lastY = (event.pageY || event.changedTouches['0'].pageY) - event.target.offsetTop;
     if(!this.state.isErasing) this.addLine(this.lastX, this.lastY);
   }  
 
+  // handles logic for drag while drawing line
   whileDrawing(event) {
     if(this.isDrawing){
-      var cx = event.pageX - event.target.offsetLeft;
-      var cy = event.pageY - event.target.offsetTop;
+      var cx = (event.pageX || event.changedTouches['0'].pageX) - event.target.offsetLeft;
+      var cy = (event.pageY || event.changedTouches['0'].pageY) - event.target.offsetTop;
+      console.log(cx,cy);
       if(this.shouldAdd(this.lastX,this.lastY,cx,cy)){
         if(this.state.isErasing){
           // collision detection
@@ -133,6 +118,24 @@ class Canvas extends React.Component {
       }
     }
   }
+
+  // handles logic for ending line
+  endDrawing() {
+    this.isDrawing = false;
+    while(this.toErase.length){
+      var doc = this.toErase.pop();
+      console.log("endDrawing", doc);
+      LinesToEraseDB.insert({
+        canvasId: this.canvasId,
+        coords: doc.coords
+      }, () => {
+        LinesToGreyDB.remove(doc._id);
+      });
+
+    }
+  }  
+
+  /* Helper functions for canvas */ 
 
   shouldAdd(lastX, lastY, curX, curY) {
     return Math.sqrt(Math.pow(lastX-curX,2) + Math.pow(lastY-curY,2)) > 15;
@@ -154,22 +157,6 @@ class Canvas extends React.Component {
       }
     });
   }
-
-  // TODO: make sure grey lines are being erased 
-  endDrawing() {
-    this.isDrawing = false;
-    while(this.toErase.length){
-      var doc = this.toErase.pop();
-      console.log("endDrawing", doc);
-      LinesToEraseDB.insert({
-        canvasId: this.canvasId,
-        coords: doc.coords
-      }, () => {
-        LinesToGreyDB.remove(doc._id);
-      });
-
-    }
-  }  
 
   createNewCanvas() {
     return CanvasesDB.insert({name:'jeff'});
@@ -259,6 +246,29 @@ class Canvas extends React.Component {
       ctx.restore();
   }
 
+  /* Canvas Tools Functionality */ 
+
+  handleShareCanvas() {
+    if(window.location.host === 'localhost:3000'){
+      window.location.assign('http://localhost:3000/canvas/' + this.canvasId);
+    }else{
+      window.location.assign('http://formative-components.meteor.com');
+    }
+  }
+
+  handleEraserChange() {
+    console.log('isErasing');
+    this.setState({
+      isErasing: !this.state.isErasing
+    })
+  }
+
+  handleColorChange(color) {
+    console.log('handleColorChange',color);
+    this.setState({
+      color: color
+    });
+  }
 }
 
 Canvas.propTypes = { 
